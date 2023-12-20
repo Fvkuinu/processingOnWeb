@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Monaco Editor and Processing.js Side by Side</title>
+    <style>
+        .container {
+            display: flex;
+            /* ビューポートの高さに合わせる */
+        }
+
+        .editor-container{
+            height: 100vh;
+            width:50vw;
+        }
+        .processing-container {
+            height: 100vh;
+            width:49vw;
+            /* 子要素の高さをコンテナの高さに合わせる */
+        }
+
+        #codeContainer,
+        #mycanvas {
+            width: 100%;
+            height: 100%;
+            border: 1px solid grey;
+        }
+
+        body,
+        html {
+            margin: 0;
+            /* 余分なマージンを削除 */
+            padding: 0;
+            /* 余分なパディングを削除 */
+            width: 100%;
+            /* ビューポートの幅に合わせる */
+            height: 100%;
+            /* ビューポートの高さに合わせる */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Monaco Editor Container -->
+        <div class="editor-container" id="placeholder">
+            <div id="codeContainer"></div>
+
+            <script src="./min/vs/loader.js"></script>
+            <script>
+                var editor;
+
+                const placeholder = document.getElementById('placeholder');
+
+                // we need the parent of the editor
+                const parent = placeholder.parentElement
+
+                window.addEventListener('resize', () => {
+                    // make editor as small as possible
+                    editor.layout({ width: 0, height: 0 })
+
+                    // wait for next frame to ensure last layout finished
+                    window.requestAnimationFrame(() => {
+                        // get the parent dimensions and re-layout the editor
+                        const rect = parent.getBoundingClientRect()
+                        editor.layout({ width: rect.width, height: rect.height })
+                    })
+                })
+                function getCodeFromEditor() {
+                    var text = editor.getValue();
+                    console.log(editor);
+                }
+
+                require.config({ paths: { vs: "./min/vs" } });
+                require(["vs/editor/editor.main"], function () {
+                    editor = monaco.editor.create(document.getElementById("codeContainer"), {
+                        value: "// setup is called before the first frame draw\nvoid setup() {\n\n}\n// draw is called once per frame\nvoid draw() {\n\n}\n",
+                        language: "java",
+
+                        //automaticLayout: true,
+                        lineNumbers: "on",
+                        roundedSelection: false,
+                        scrollBeyondLastLine: false,
+                        readOnly: false,
+                        theme: "vs-dark",
+                    });
+                    editor.getModel().onDidChangeContent((event) => {
+                        runSketch();
+                    });
+                });
+                function runSketch() {
+                    var userCode = editor.getValue();
+                    var canvas = document.getElementById("mycanvas");
+                    /*
+                    // 既存のscriptタグを削除
+                    var oldScript = document.getElementById("processing-script");
+                    if (oldScript) {
+                        oldScript.remove();
+                    }
+        
+                    // 新しいscriptタグを作成
+                    var script = document.createElement("script");
+                    script.type = "application/processing";
+                    script.id = "processing-script";
+                    script.textContent = userCode;
+                    script.setAttribute("data-processing-target", "mycanvas");
+                    // scriptタグをbodyに追加
+                    document.body.appendChild(script);
+        */
+                    // 既存のProcessingインスタンスが存在する場合は削除
+                    if (window.processingInstance) {
+                        window.processingInstance.exit();
+                    }
+
+                    // ユーザーのコードで新しいProcessingインスタンスを作成
+                    var script = document.createElement("script");
+                    script.type = "application/processing";
+                    script.textContent = userCode;
+                    script.setAttribute("data-processing-target", "mycanvas");
+                    // キャンバスに新しいProcessingインスタンスを作成し、アタッチ
+                    var text = editor.getValue();
+                    /*try {
+                        proc = new Processing(canvas, script.textContent);
+                    } catch (e) {
+                        alert(e);
+                    }*/
+                    proc = new Processing(canvas, script.textContent);
+                    window.processingInstance = proc;
+
+                }
+            </script>
+        </div>
+
+        <!-- Processing.js Container -->
+        <div class="processing-container">
+
+            <canvas id="mycanvas"></canvas>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/processing.js/1.4.8/processing.min.js"></script>
+            <script>
+
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>
