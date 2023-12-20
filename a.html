@@ -3,30 +3,21 @@
   <head>
     <title>browser-amd-editor</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <style>
+      .container {
+        width: 200px; /* コンテナの幅を設定 */
+      }
+    
+      .float-right {
+        float: right; /* 右に浮動 */
+        width: 150px; /* 浮動する要素の幅 */
+      }
+    </style>
   </head>
   <body>
-    <h2>Monaco Editor Sample</h2>
-    <div
-      id="container"
-      style="width: 800px; height: 600px; border: 1px solid grey;"
-    ></div>
-    <script src="./min/vs/loader.js"></script>
-    <script>
-      require.config({ paths: { vs: "./min/vs" } });
-
-      require(["vs/editor/editor.main"], function () {
-        var editor = monaco.editor.create(
-          document.getElementById("container"),
-          {
-            value: [
-              "function x() {",
-              '\tconsole.log("Hello world!");',
-              "}",
-            ].join("\n"),
-            language: "java",
-          }
-        );
-      });
-    </script>
+    <div class="container">
+      <div class="float-right">この要素は右に浮動し、コンテナからはみ出します。</div>
+      このテキストは浮動要素の隣に配置されます。
+    </div>
   </body>
 </html>

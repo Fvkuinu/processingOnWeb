@@ -89,12 +89,12 @@
                     script.setAttribute("data-processing-target", "mycanvas");
                     // キャンバスに新しいProcessingインスタンスを作成し、アタッチ
                     var text = editor.getValue();
-                    /*try {
+                    try {
                         proc = new Processing(canvas, script.textContent);
                     } catch (e) {
                         alert(e);
-                    }*/
-                    proc = new Processing(canvas, script.textContent);
+                    }
+                    //proc = new Processing(canvas, script.textContent);
                     window.processingInstance = proc;
 
                 }

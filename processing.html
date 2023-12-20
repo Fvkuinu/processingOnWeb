@@ -2,32 +2,45 @@
 <html>
 
 <head>
-    <title>Monaco Editor and Processing.js Side by Side</title>
+    <title>Processingだよ</title>
     <style>
         .container {
-            display: flex;
+
             /* ビューポートの高さに合わせる */
         }
 
-        .editor-container{
-            height: 100vh;
-            width:50vw;
+        .editor-container {
+            width: 100vw;
+            height: 35vh;
+
         }
+
         .processing-container {
-            height: 100vh;
-            width:49vw;
+            margin: 5px;
+
             /* 子要素の高さをコンテナの高さに合わせる */
         }
 
-        #codeContainer,
-        #mycanvas {
+        #codeContainer {
+
             width: 100%;
             height: 100%;
             border: 1px solid grey;
         }
 
+        .reloadLabel {
+            color: rgb(227, 227, 227);
+        }
+
+        #mycanvas {}
+
+        #run {
+            margin: 5px 0px 0px 5px;
+        }
+
         body,
         html {
+            background-color: rgb(20, 20, 20);
             margin: 0;
             /* 余分なマージンを削除 */
             padding: 0;
@@ -42,6 +55,11 @@
 
 <body>
     <div class="container">
+        <div id="run">
+            <img src="再生マークのアイコン.png" width="50px" height="50px">
+            <label class="reloadLabel"><input type="checkbox" id="autoReload">自動更新</label>
+        </div>
+
         <!-- Monaco Editor Container -->
         <div class="editor-container" id="placeholder">
             <div id="codeContainer"></div>
@@ -49,13 +67,37 @@
             <script src="./min/vs/loader.js"></script>
             <script>
                 var editor;
+                var autoReload = document.getElementById('autoReload');
+                //monacoeditor関連の初期化
+                require.config({ paths: { vs: "./min/vs" } });
+                require(["vs/editor/editor.main"], function () {
+                    editor = monaco.editor.create(document.getElementById("codeContainer"), {
+                        value: "// setup is called before the first frame draw\nvoid setup() {\n\tsize(500,500);\n}\n\n// draw is called once per frame\nvoid draw() {\n\tbackground(200);\n}\n",
+                        language: "java",
 
-                const placeholder = document.getElementById('placeholder');
+                        //automaticLayout: true,
+                        lineNumbers: "on",
+                        roundedSelection: false,
+                        scrollBeyondLastLine: false,
+                        readOnly: false,
+                        theme: "vs-dark",
+                    });
+                    //エディタ更新時に自動で実行
+                    editor.getModel().onDidChangeContent((event) => {
+                    if (autoReload.checked){
+                        runSketch();
+                    }
+                    });
+                });
+
+                //editorの親要素
+                const placeholder = document.getElementById('codeContainer');
 
                 // we need the parent of the editor
                 const parent = placeholder.parentElement
-
+                //ウィンドウリサイズ時の関数
                 window.addEventListener('resize', () => {
+                    //結局はeditorのサイズを親要素に合わせたいだけ
                     // make editor as small as possible
                     editor.layout({ width: 0, height: 0 })
 
@@ -66,47 +108,24 @@
                         editor.layout({ width: rect.width, height: rect.height })
                     })
                 })
+                //ウィンドウが読み込まれた時
+                window.addEventListener('load', () => {
+                    runSketch();
+                })
+
+                //エディタからコードを取得する関数
                 function getCodeFromEditor() {
                     var text = editor.getValue();
                     console.log(editor);
                 }
 
-                require.config({ paths: { vs: "./min/vs" } });
-                require(["vs/editor/editor.main"], function () {
-                    editor = monaco.editor.create(document.getElementById("codeContainer"), {
-                        value: "// setup is called before the first frame draw\nvoid setup() {\n\n}\n// draw is called once per frame\nvoid draw() {\n\n}\n",
-                        language: "java",
 
-                        //automaticLayout: true,
-                        lineNumbers: "on",
-                        roundedSelection: false,
-                        scrollBeyondLastLine: false,
-                        readOnly: false,
-                        theme: "vs-dark",
-                    });
-                    editor.getModel().onDidChangeContent((event) => {
-                        runSketch();
-                    });
-                });
+
+                //エディタからコードを取得して実行する関数
                 function runSketch() {
                     var userCode = editor.getValue();
                     var canvas = document.getElementById("mycanvas");
-                    /*
-                    // 既存のscriptタグを削除
-                    var oldScript = document.getElementById("processing-script");
-                    if (oldScript) {
-                        oldScript.remove();
-                    }
-        
-                    // 新しいscriptタグを作成
-                    var script = document.createElement("script");
-                    script.type = "application/processing";
-                    script.id = "processing-script";
-                    script.textContent = userCode;
-                    script.setAttribute("data-processing-target", "mycanvas");
-                    // scriptタグをbodyに追加
-                    document.body.appendChild(script);
-        */
+
                     // 既存のProcessingインスタンスが存在する場合は削除
                     if (window.processingInstance) {
                         window.processingInstance.exit();
@@ -119,15 +138,24 @@
                     script.setAttribute("data-processing-target", "mycanvas");
                     // キャンバスに新しいProcessingインスタンスを作成し、アタッチ
                     var text = editor.getValue();
-                    /*try {
-                        proc = new Processing(canvas, script.textContent);
-                    } catch (e) {
-                        alert(e);
-                    }*/
-                    proc = new Processing(canvas, script.textContent);
-                    window.processingInstance = proc;
+                    //自動更新が有効ならエラーは無視
+                    if (autoReload.checked) {
+                        pde = new Processing(canvas, script.textContent);
+                    } else {
+                        try {
+                            pde = new Processing(canvas, script.textContent);
+                        } catch (e) {
+                            alert(e.message);
+                        }
+                    }
+                    window.processingInstance = pde;
 
                 }
+                //実行ボタンのイベント
+                const runicon = document.getElementById("run");
+                runicon.addEventListener("click", () => {
+                    runSketch();
+                })
             </script>
         </div>
 
